@@ -14,39 +14,11 @@ namespace MatchThree
         void Awake()
         {
             sr = GetComponent<SpriteRenderer>();
-            brain_linking = GameObject.Find("MatchThreeBrain").GetComponent<MThree_S>();
+            brain_linking = GameObject.Find("MatchFreeBrain").GetComponent<MThree_S>();
         }
 
-        // Use this for initialization
-        void Start()
-        {
-            // call the enumerator and get randomize the starting color
-            switch ((block)(Random.Range(0, 5)))
-            {
-                case block.red:
-                    sr.color = Color.red;
-                    break;
-
-                case block.blue:
-                    sr.color = Color.blue;
-                    break;
-
-                case block.green:
-                    sr.color = Color.green;
-                    break;
-
-                case block.cyan:
-                    sr.color = Color.cyan;
-                    break;
-
-                case block.magenta:
-                    sr.color = Color.magenta;
-                    break;
-            }
-
-
-        }
-
+    
+        
         void OnMouseUp()
         {
 
