@@ -5,15 +5,14 @@ namespace MatchThree
 {
     public class Cell_S : MonoBehaviour
     {
-        public SpriteRenderer sr;
+        public SpriteRenderer cell_sr;
         MThree_S brain_linking;
-        // define the enumerator for cells color
-        public enum block { red, blue, green, cyan, magenta };
+        public int cell_i, cell_j;
         
         // get and initialize sprite renderer componet
         void Awake()
         {
-            sr = GetComponent<SpriteRenderer>();
+            cell_sr = GetComponent<SpriteRenderer>();
             brain_linking = GameObject.Find("MatchFreeBrain").GetComponent<MThree_S>();
         }
 
