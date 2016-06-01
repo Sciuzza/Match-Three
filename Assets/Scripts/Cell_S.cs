@@ -6,6 +6,7 @@ namespace MatchThree
     public class Cell_S : MonoBehaviour
     {
         public SpriteRenderer sr;
+        MThree_S brain_linking;
         // define the enumerator for cells color
         public enum block { red, blue, green, cyan, magenta };
         
@@ -13,6 +14,7 @@ namespace MatchThree
         void Awake()
         {
             sr = GetComponent<SpriteRenderer>();
+            brain_linking = GameObject.Find("MatchThreeBrain").GetComponent<MThree_S>();
         }
 
         // Use this for initialization
@@ -48,9 +50,10 @@ namespace MatchThree
         void OnMouseUp()
         {
 
+            
           //if current game phase is set to Animation will appear a debug message saying "animation in progress..." and click will have no effects
 
-          //else if current game phase is set to sel_source the player will be able to select 1 block
+          //else if current game phase is set to sel_source the player will be able to select 1 block, when this will happen game phase will be switched on sel_dest
 
           //else if current game phase is set to sel_dest the player will be able to select an adiacent block to the first one selected in the previous game phase
             
