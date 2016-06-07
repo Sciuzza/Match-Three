@@ -40,6 +40,7 @@ namespace MatchThree
                         brain_linking.selection_visibility_dest(cell_i, cell_j);
                         brain_linking.animation_swap();
                         brain_linking.deselecting();
+                        brain_linking.destroying_tris();
                     }
                     else
                         Debug.Log("Selection is correct but not possible because it doesn't generate tris");

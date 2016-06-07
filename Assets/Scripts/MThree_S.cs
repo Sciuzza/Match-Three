@@ -7,20 +7,25 @@ namespace MatchThree
     public class MThree_S : MonoBehaviour
     {
 
-        GameObject cell_linking_init, block_linking_init;
-        public Cell_S cell_linking_script_1, cell_linking_script_2, cell_linking_script_3;
-        Block_S block_linking_script_1, block_linking_script_2;
-        int rows = 0;
-        public int cell_source_i, cell_source_j, cell_dest_i, cell_dest_j;
-        public bool tris_dest = false, tris_source = false;
-        public int count_right = 0, count_left = 0, count_top = 0, count_bot = 0, count_midh = 0, count_midv = 0;
+        
 
+        Cell_S cell_linking_script_1, cell_linking_script_2, cell_linking_script_3;
+        Block_S block_linking_script_1, block_linking_script_2;
+        public List<GameObject> tris_cells = new List<GameObject>();
         public GameObject[,] cell_pointers = new GameObject[8, 10];
         public GameObject[,] blocks_pointers = new GameObject[8, 10];
-        List<int> color_possibilities = new List<int>();
-        public List<GameObject> tris_cells = new List<GameObject>();
         public enum game_phases { init, animation, sel_source, sel_dest };
         public game_phases current_gp;
+
+
+        GameObject cell_linking_init, block_linking_init;
+        int rows = 0;
+        int cell_source_i, cell_source_j, cell_dest_i, cell_dest_j;
+        public bool tris_dest = false, tris_source = false;
+        public int count_right = 0, count_left = 0, count_top = 0, count_bot = 0, count_midh = 0, count_midv = 0;        
+        List<int> color_possibilities = new List<int>();
+
+        // Time
         public float time_start;
         public float time_end;
 
@@ -36,7 +41,7 @@ namespace MatchThree
                     cell_linking_init = Resources.Load<GameObject>("Cell");
                     cell_linking_init = Instantiate(cell_linking_init);
                     cell_pointers[i, j] = cell_linking_init;
-                    cell_linking_init.transform.position = new Vector3(j - 4.5f, i - 3.5f, -12);
+                    cell_linking_init.transform.position = new Vector3(j - 4.5f, i - 3.5f, 0);
                     cell_linking_init.name = "Cell" + i + "," + j;
                     cell_linking_script_1 = cell_linking_init.GetComponent<Cell_S>();
                     color_randomization();
@@ -113,6 +118,7 @@ namespace MatchThree
 
         void fixing_tris(int i_temp, int j_temp)
         {
+            // LEft Tris Checking
             if (j_temp > 1)
             {
                 cell_linking_script_2 = cell_pointers[i_temp, j_temp - 1].GetComponent<Cell_S>();
@@ -126,6 +132,7 @@ namespace MatchThree
                     exclude_color_second_step_tris();
 
             }
+            //Bottom Tris Checking
             if (i_temp > 1)
             {
                 cell_linking_script_2 = cell_pointers[i_temp - 1, j_temp].GetComponent<Cell_S>();
@@ -300,10 +307,10 @@ namespace MatchThree
 
                     while ((cell_j_temp + j_searching) < cell_pointers.GetLength(1) && tris_longer)
                     {
-                        cell_linking_script_1 = cell_pointers[cell_i_temp, cell_j_temp + 3].GetComponent<Cell_S>();
+                        cell_linking_script_1 = cell_pointers[cell_i_temp, cell_j_temp + j_searching].GetComponent<Cell_S>();
                         if (cell_linking_script_1.sr_array[0].color == cell_linking_script_3.sr_array[0].color)
                         {
-                          tris_cells.Add(cell_pointers[cell_i_temp, cell_j_temp + 3]);
+                          tris_cells.Add(cell_pointers[cell_i_temp, cell_j_temp + j_searching]);
                         }
                         else
                             tris_longer = false;
@@ -339,12 +346,12 @@ namespace MatchThree
                     tris_cells.Add(cell_pointers[cell_i_temp, cell_j_temp - 2]);
                     j_searching = -3;
 
-                    while ((cell_j_temp - j_searching) > 0 && tris_longer)
+                    while ((cell_j_temp + j_searching) > 0 && tris_longer)
                     {
-                        cell_linking_script_1 = cell_pointers[cell_i_temp, cell_j_temp - 3].GetComponent<Cell_S>();
+                        cell_linking_script_1 = cell_pointers[cell_i_temp, cell_j_temp + j_searching].GetComponent<Cell_S>();
                         if (cell_linking_script_1.sr_array[0].color == cell_linking_script_3.sr_array[0].color)
                         {
-                            tris_cells.Add(cell_pointers[cell_i_temp, cell_j_temp - 3]);
+                            tris_cells.Add(cell_pointers[cell_i_temp, cell_j_temp + j_searching]);
                         }
                         else
                             tris_longer = false;
@@ -383,10 +390,10 @@ namespace MatchThree
 
                     while ((cell_i_temp + i_searching) < cell_pointers.GetLength(0) && tris_longer)
                     {
-                        cell_linking_script_1 = cell_pointers[cell_i_temp + 3, cell_j_temp].GetComponent<Cell_S>();
+                        cell_linking_script_1 = cell_pointers[cell_i_temp + i_searching, cell_j_temp].GetComponent<Cell_S>();
                         if (cell_linking_script_1.sr_array[0].color == cell_linking_script_3.sr_array[0].color)
                         {
-                            tris_cells.Add(cell_pointers[cell_i_temp + 3, cell_j_temp]);
+                            tris_cells.Add(cell_pointers[cell_i_temp + i_searching, cell_j_temp]);
                         }
                         else
                             tris_longer = false;
@@ -423,12 +430,12 @@ namespace MatchThree
 
                     i_searching = -3;
 
-                    while ((cell_i_temp - i_searching) > 0 && tris_longer)
+                    while ((cell_i_temp + i_searching) > 0 && tris_longer)
                     {
-                        cell_linking_script_1 = cell_pointers[cell_i_temp - 3, cell_j_temp].GetComponent<Cell_S>();
+                        cell_linking_script_1 = cell_pointers[cell_i_temp + i_searching, cell_j_temp].GetComponent<Cell_S>();
                         if (cell_linking_script_1.sr_array[0].color == cell_linking_script_3.sr_array[0].color)
                         {
-                            tris_cells.Add(cell_pointers[cell_i_temp - 3, cell_j_temp]);
+                            tris_cells.Add(cell_pointers[cell_i_temp + i_searching, cell_j_temp]);
                         }
                         else
                             tris_longer = false;
@@ -513,8 +520,16 @@ namespace MatchThree
             block_linking_script_2 = blocks_pointers[cell_dest_i, cell_dest_j].GetComponent<Block_S>();
 
             block_linking_script_1.target_cell = cell_pointers[cell_dest_i, cell_dest_j].transform;
-            block_linking_script_2.target_cell = cell_pointers[cell_source_i, cell_source_j].transform;
+            block_linking_script_1.block_i = cell_source_i;
+            block_linking_script_1.block_j = cell_source_j;
 
+            block_linking_script_2.target_cell = cell_pointers[cell_source_i, cell_source_j].transform;
+            block_linking_script_2.block_i = cell_dest_i;
+            block_linking_script_2.block_j = cell_dest_j;
+
+            block_linking_init = blocks_pointers[cell_source_i, cell_source_j];
+            blocks_pointers[cell_source_i, cell_source_j] = blocks_pointers[cell_dest_i, cell_dest_j];
+            blocks_pointers[cell_dest_i, cell_dest_j] = block_linking_init;
         }
 
         public void deselecting()
@@ -524,6 +539,16 @@ namespace MatchThree
 
             block_linking_script_1.sr_array[1].color = new Color(block_linking_script_1.sr_array[1].color.r, block_linking_script_1.sr_array[1].color.g, block_linking_script_1.sr_array[1].color.b, 0);
             block_linking_script_2.sr_array[1].color = new Color(block_linking_script_1.sr_array[1].color.r, block_linking_script_1.sr_array[1].color.g, block_linking_script_1.sr_array[1].color.b, 0);
+        }
+
+        public void destroying_tris()
+        {
+            for (int i = 0; i < tris_cells.Count; i++)
+            {
+                cell_linking_script_1 = tris_cells[i].GetComponent<Cell_S>();
+                Destroy(blocks_pointers[cell_linking_script_1.cell_i, cell_linking_script_1.cell_j]);
+                cell_linking_script_1.sr_array[0].color = Color.white;
+            }
         }
 
 
