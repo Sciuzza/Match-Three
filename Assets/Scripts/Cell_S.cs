@@ -8,7 +8,8 @@ namespace MatchThree
         public SpriteRenderer[] sr_array = new SpriteRenderer[1];
         MThree_S brain_linking;
         public int cell_i, cell_j;
-        public bool red_p = true, blue_p = true, green_p = true, cyan_p = true, magenta_p = true; 
+        public bool red_p = true, blue_p = true, green_p = true, cyan_p = true, magenta_p = true;
+        public bool tris_checked = false;
         
         // get and initialize sprite renderer componet
         void Awake()
@@ -42,6 +43,8 @@ namespace MatchThree
                         brain_linking.destroying_tris();
                         brain_linking.generating_mg_columns();
                         brain_linking.set_new_targets();
+                        brain_linking.falling_blocks_generation();
+                        
                     }
                     else
                         Debug.Log("Selection is correct but not possible because it doesn't generate tris");
