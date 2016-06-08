@@ -26,7 +26,7 @@ namespace MatchThree
             
 
             //if current game phase is set to Animation will appear a debug message saying "animation in progress..." and click will have no effects
-            if (brain_linking.current_gp == MThree_S.game_phases.init || brain_linking.current_gp >= MThree_S.game_phases.tris_combo)
+            if (brain_linking.current_gp == MThree_S.game_phases.init || brain_linking.current_gp >= MThree_S.game_phases.animation)
                 Debug.Log("Animation in progress...");
             else if (brain_linking.current_gp == MThree_S.game_phases.sel_source)
             {
@@ -40,11 +40,6 @@ namespace MatchThree
                     {
                         brain_linking.animation_swap();
                         brain_linking.deselecting();
-                        brain_linking.destroying_tris();
-                        brain_linking.generating_mg_columns();
-                        brain_linking.set_new_targets();
-                        brain_linking.falling_blocks_generation();
-                        
                     }
                     else
                         Debug.Log("Selection is correct but not possible because it doesn't generate tris");
