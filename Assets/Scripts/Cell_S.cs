@@ -45,6 +45,10 @@ namespace MatchThree
                         Debug.Log("Selection is correct but not possible because it doesn't generate tris");
                 }
                 else
+                {
+                    brain_linking.deselecting();
+                    brain_linking.selection_visibility_source(cell_i, cell_j);
+                }
                     Debug.Log("Wrong Selection");
             }
     
