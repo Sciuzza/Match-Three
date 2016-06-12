@@ -17,7 +17,6 @@ namespace MatchThree
         {
             brain_linking = GameObject.Find("MatchFreeBrain").GetComponent<MThree_S>();
             timerLabel = this.GetComponent<Text>();
-            timerLabel.text = "" + brain_linking.time;
             minutes = (int)brain_linking.time / 60;
             seconds = (int)brain_linking.time % 60;
             timerLabel.text = string.Format("{0:00} : {1:00}", minutes, seconds);

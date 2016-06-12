@@ -13,6 +13,8 @@ namespace MatchThree
         public SpriteRenderer[] sr_array = new SpriteRenderer[2];
         public int block_i, block_j;
         MThree_S brain_linking;
+        public ParticleSystem ps_link;
+        public bool is_dying = false;
        
 
         void Awake()
@@ -20,7 +22,7 @@ namespace MatchThree
             sr_array[0] = GetComponent<SpriteRenderer>();
             sr_array[1] = this.transform.Find("Selection").GetComponent<SpriteRenderer>();
             brain_linking = GameObject.Find("MatchFreeBrain").GetComponent<MThree_S>();
-            
+            ps_link = GetComponent<ParticleSystem>();
         }
 
         void Start()
@@ -45,6 +47,9 @@ namespace MatchThree
             {
                 transform.position = new Vector3(target_cell.position.x, target_cell.position.y, 8);
             }
+
+            if (!ps_link.isPlaying && is_dying)
+                Destroy(this.gameObject);
 
         }
      
