@@ -10,7 +10,7 @@ namespace MatchThree
         // Scene selector
         public void StartGame()
         {
-            SceneManager.LoadScene("Cri_Scene");
+            SceneManager.LoadScene("GamePlay");
         }
 
         public void Credits()

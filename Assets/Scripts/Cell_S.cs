@@ -30,6 +30,7 @@ namespace MatchThree
                 Debug.Log("Animation in progress...");
             else if (brain_linking.current_gp == MThree_S.game_phases.sel_source)
             {
+                brain_linking.reset_all();
                 brain_linking.selection_visibility_source(cell_i, cell_j);
             }
             else if (brain_linking.current_gp == MThree_S.game_phases.sel_dest)
@@ -39,17 +40,20 @@ namespace MatchThree
                     if (brain_linking.is_sel_generating_tris(cell_i, cell_j))
                     {
                         brain_linking.animation_swap();
-                        brain_linking.deselecting();
+                        brain_linking.Invoke("deselecting", 0.3f);
                     }
                     else
-                        Debug.Log("Selection is correct but not possible because it doesn't generate tris");
+                    {
+                        brain_linking.animation_swap();
+                        brain_linking.Invoke("reverse_swap", 0.5f);
+                    }
                 }
                 else
                 {
                     brain_linking.deselecting();
                     brain_linking.selection_visibility_source(cell_i, cell_j);
                 }
-                    Debug.Log("Wrong Selection");
+                    
             }
     
           

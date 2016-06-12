@@ -8,12 +8,12 @@ namespace MatchThree
 
 
         public float speed;
-        public Vector2 direction, distance;
+        public Vector2 direction, distance = new Vector2 (-100, -100);
         public Transform target_cell;
         public SpriteRenderer[] sr_array = new SpriteRenderer[2];
         public int block_i, block_j;
         MThree_S brain_linking;
-        
+       
 
         void Awake()
         {
@@ -25,23 +25,25 @@ namespace MatchThree
 
         void Start()
         {
-            sr_array[0].color = brain_linking.color_block_setting(block_i, block_j);
+            sr_array[0].sprite = brain_linking.color_block_setting(block_i, block_j);
+            
             this.name = "Block " + block_i + "," + block_j;
         }
 
         // Update is called once per frame
         void Update()
-        {          
+        {
+
             
                 distance = this.transform.position - target_cell.position;
                 direction = distance.normalized;
 
 
-                this.transform.position = (Vector2)this.transform.position + direction * speed * Time.deltaTime;
+                this.transform.position = (Vector2)(this.transform.position) + direction * speed * Time.deltaTime;
             
-            if (distance.magnitude < 0.1f)
+            if (distance.magnitude <= 0.1f)
             {
-                transform.position = new Vector2(target_cell.position.x, target_cell.position.y);
+                transform.position = new Vector3(target_cell.position.x, target_cell.position.y, 8);
             }
 
         }

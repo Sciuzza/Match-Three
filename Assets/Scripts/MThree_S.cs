@@ -1,40 +1,76 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.SceneManagement;
 
 namespace MatchThree
 {
     public class MThree_S : MonoBehaviour
     {
 
-
-
-        Cell_S cell_linking_script_1, cell_linking_script_2, cell_linking_script_3;
-        Block_S block_linking_script_1, block_linking_script_2;
-        public List<GameObject> tris_cells = new List<GameObject>();
-        public List<int> mg_columns = new List<int>();
+        // The two references matrix to manage cells and blocks all over the game phases
         public GameObject[,] cell_pointers = new GameObject[8, 10];
         public GameObject[,] blocks_pointers = new GameObject[8, 10];
+
+        // Game phases 
         public enum game_phases { init, sel_source, sel_dest, animation, cyclyng_animation, waiting };
         public game_phases current_gp;
+        
+        //Score
+        public float score = 0;
 
+        //Timer
+        public float time = 30;
+        public bool updating_time = false;
 
+        // First one is used in the initialization process only, the second one is used to update the blocks pointer matrix too 
         GameObject cell_linking_init, block_linking_init;
+
+        //Variable used during the initialization by the block spawning phase
         int rows = 0;
-        int cell_source_i, cell_source_j, cell_dest_i, cell_dest_j;
-        public bool tris_dest = false, tris_source = false;
-        public int count_right = 0, count_left = 0, count_top = 0, count_bot = 0, count_midh = 0, count_midv = 0;
+
+        // Used for the Smart Randomization Color System
         List<int> color_possibilities = new List<int>();
+
+        //Debugging Variables
 
         // Time
         public float time_start;
         public float time_end;
+
+        // Variables to reset each sel source
+
+        // Tris Direction Counting
+        public int count_right = 0, count_left = 0, count_top = 0, count_bot = 0, count_midh = 0, count_midv = 0;
+
+        //Cycling Counter
+        public int c_counter = -1;
+
+        //Scripts references needed in almost all methods
+        Cell_S cell_linking_script_1, cell_linking_script_2, cell_linking_script_3;
+        Block_S block_linking_script_1, block_linking_script_2;
+
+        //Lists needed to save the cells to be destroyed and the columns to check for tris
+        public List<GameObject> tris_cells = new List<GameObject>();
+        public List<int> mg_columns = new List<int>();
+
+        // variables needed to save the row and column position of the blocks/cells involved in the source and dest phases
+        int cell_source_i, cell_source_j, cell_dest_i, cell_dest_j;
+
+        //booleans needed to understand which cell is generating a tris during the swap
+        public bool tris_dest = false, tris_source = false;
+
+
 
         void Awake()
         {
 
             time_start = Time.realtimeSinceStartup;
 
+
+            
+
+            //Here the invisible matrix will be generated
             for (int i = 0; i < cell_pointers.GetLength(0); i++)
             {
                 for (int j = 0; j < cell_pointers.GetLength(1); j++)
@@ -42,7 +78,7 @@ namespace MatchThree
                     cell_linking_init = Resources.Load<GameObject>("Cell");
                     cell_linking_init = Instantiate(cell_linking_init);
                     cell_pointers[i, j] = cell_linking_init;
-                    cell_linking_init.transform.position = new Vector3(j - 4.5f, i - 3.5f, -12);
+                    cell_linking_init.transform.position = new Vector3(j - 4.5f, i - 3.5f, cell_linking_init.transform.position.z);
                     cell_linking_init.name = "Cell" + i + "," + j;
                     cell_linking_script_1 = cell_linking_init.GetComponent<Cell_S>();
                     color_randomization();
@@ -54,6 +90,7 @@ namespace MatchThree
 
             time_end = Time.realtimeSinceStartup;
 
+            //Blocks will start spawning by top
             block_spawning_init();
 
 
@@ -61,19 +98,33 @@ namespace MatchThree
 
         public void Update()
         {
+
+            if (time <= 0)
+                SceneManager.LoadScene("Menu");
+
+            // Will spawn another row when the current one is surpassing the top matrix row plus a value that will increase over time to deacrease the spawn time
             if (current_gp == game_phases.init)
             {
-                if (block_linking_init.transform.position.y < cell_pointers[7, 0].transform.position.y && rows < 7)
+                if (block_linking_init.transform.position.y < (cell_pointers[7, 0].transform.position.y + rows/2.3f) && rows < 7)
                 {
                     rows++;
                     block_spawning_init();
                 }
             }
 
+            //When all rows are spawned will check if all blocks are in position, if the condition is true the player will be able to start playing
+            if (current_gp == game_phases.init && rows == 7)
+            {
+                if (blocks_in_position())
+                    current_gp = game_phases.sel_source;
+            }
+                    
+            //Every time the game phase will be on cycling animation destroying tris will be called only once and no more because in the end the method will switch to waiting phase
             if (current_gp == game_phases.cyclyng_animation)
                 destroying_tris();
-            
 
+            //In this phase the system will check every update if block are in position, when the condition is true will then check if tris have been generated, if the condition is true 
+            //the game phase will be switched again to ciclyng animation, otherwise will be switched to sel source and player will be able to play
             if (current_gp == game_phases.waiting)
             {
                 if (blocks_in_position())
@@ -84,7 +135,7 @@ namespace MatchThree
                         current_gp = game_phases.sel_source;
                 }
 
-                    
+
             }
 
         }
@@ -204,13 +255,41 @@ namespace MatchThree
 
         }
 
-       
+
         //Blocks Management methods
 
-        public Color color_block_setting(int block_i_temp, int block_j_temp)
+        public Sprite color_block_setting(int block_i_temp, int block_j_temp)
         {
             cell_linking_script_1 = cell_pointers[block_i_temp, block_j_temp].GetComponent<Cell_S>();
-            return cell_linking_script_1.sr_array[0].color;
+            Sprite block_sprite;
+
+            if (cell_linking_script_1.sr_array[0].color == Color.red)
+            {
+                block_sprite = Resources.Load<Sprite>("Red");
+                return block_sprite;
+            }
+            else if (cell_linking_script_1.sr_array[0].color == Color.blue)
+            {
+                block_sprite = Resources.Load<Sprite>("Blue");
+                return block_sprite;
+            }
+            else if (cell_linking_script_1.sr_array[0].color == Color.green)
+            {
+                block_sprite = Resources.Load<Sprite>("Green");
+                return block_sprite;
+            }
+            else if (cell_linking_script_1.sr_array[0].color == Color.cyan)
+            {
+                block_sprite = Resources.Load<Sprite>("Cyan");
+                return block_sprite;
+            }
+            else
+            {
+                block_sprite = Resources.Load<Sprite>("Magenta");
+                return block_sprite;
+            }
+
+
         }
 
         void block_spawning_init()
@@ -220,22 +299,48 @@ namespace MatchThree
                 block_linking_init = Resources.Load<GameObject>("Block");
                 block_linking_init = Instantiate<GameObject>(block_linking_init);
                 blocks_pointers[rows, j] = block_linking_init;
-                block_linking_init.transform.position = new Vector2(cell_pointers[rows, j].transform.position.x, 10);
+                block_linking_init.transform.position = new Vector3(cell_pointers[rows, j].transform.position.x, 10, block_linking_init.transform.position.z);
                 block_linking_script_1 = block_linking_init.GetComponent<Block_S>();
                 block_linking_script_1.target_cell = cell_pointers[rows, j].transform;
                 block_linking_script_1.block_i = rows;
                 block_linking_script_1.block_j = j;
             }
 
-            if (rows == 7)
-                current_gp = game_phases.sel_source;
         }
 
 
         //Selection Source methods
 
+        public void reset_all()
+        {
+            cell_linking_script_1 = null;
+            cell_linking_script_2 = null;
+            cell_linking_script_3 = null;
+            block_linking_script_1 = null;
+            block_linking_script_2 = null;
+            tris_cells.Clear();
+            tris_cells.TrimExcess();
+            mg_columns.Clear();
+            mg_columns.TrimExcess();
+            cell_source_i = -1;
+            cell_source_j = -1;
+            cell_dest_i = -1;
+            cell_dest_j = -1;
+            tris_dest = false;
+            tris_source = false;
+            count_bot = 0;
+            count_left = 0;
+            count_midh = 0;
+            count_midv = 0;
+            count_right = 0;
+            count_top = 0;
+        }
+
         public void selection_visibility_source(int cell_i_temp, int cell_j_temp)
         {
+            cell_dest_j = -1;
+            cell_dest_i = -1;
+
             block_linking_script_1 = blocks_pointers[cell_i_temp, cell_j_temp].GetComponent<Block_S>();
             block_linking_script_1.sr_array[1].color = new Color(block_linking_script_1.sr_array[1].color.r, block_linking_script_1.sr_array[1].color.g, block_linking_script_1.sr_array[1].color.b, 255);
             cell_source_i = cell_i_temp;
@@ -293,7 +398,6 @@ namespace MatchThree
             }
             else
             {
-                current_gp = game_phases.animation;
                 return true;
             }
         }
@@ -532,6 +636,8 @@ namespace MatchThree
 
         public void animation_swap()
         {
+            current_gp = game_phases.animation;
+
             //Taking the two blocks involved in the swap
             block_linking_script_1 = blocks_pointers[cell_source_i, cell_source_j].GetComponent<Block_S>();
             block_linking_script_2 = blocks_pointers[cell_dest_i, cell_dest_j].GetComponent<Block_S>();
@@ -555,13 +661,62 @@ namespace MatchThree
             blocks_pointers[cell_dest_i, cell_dest_j].name = "Block " + block_linking_script_1.block_i + "," + block_linking_script_1.block_j;
         }
 
+        public void reverse_swap()
+        {
+            int cell_i_temp, cell_j_temp;
+
+            cell_i_temp = cell_source_i;
+            cell_j_temp = cell_source_j;
+
+            cell_source_i = cell_dest_i;
+            cell_source_j = cell_dest_j;
+
+            cell_dest_i = cell_i_temp;
+            cell_dest_j = cell_j_temp;
+
+            //Taking the two blocks involved in the swap
+            block_linking_script_1 = blocks_pointers[cell_source_i, cell_source_j].GetComponent<Block_S>();
+            block_linking_script_2 = blocks_pointers[cell_dest_i, cell_dest_j].GetComponent<Block_S>();
+
+            // Moving Blocks to their new cells and changing their identifiers 
+            block_linking_script_1.target_cell = cell_pointers[cell_dest_i, cell_dest_j].transform;
+            block_linking_script_1.block_i = cell_dest_i;
+            block_linking_script_1.block_j = cell_dest_j;
+
+            block_linking_script_2.target_cell = cell_pointers[cell_source_i, cell_source_j].transform;
+            block_linking_script_2.block_i = cell_source_i;
+            block_linking_script_2.block_j = cell_source_j;
+
+            //Changing their linkings so the the game controller knows their new name too
+            block_linking_init = blocks_pointers[cell_source_i, cell_source_j];
+            blocks_pointers[cell_source_i, cell_source_j] = blocks_pointers[cell_dest_i, cell_dest_j];
+            blocks_pointers[cell_dest_i, cell_dest_j] = block_linking_init;
+
+            //Changing the names of the blocks accordingly in Unity
+            blocks_pointers[cell_source_i, cell_source_j].name = "Block " + block_linking_script_2.block_i + "," + block_linking_script_2.block_j;
+            blocks_pointers[cell_dest_i, cell_dest_j].name = "Block " + block_linking_script_1.block_i + "," + block_linking_script_1.block_j;
+
+            cell_source_i = cell_i_temp;
+            cell_source_j = cell_j_temp;
+
+            cell_dest_i = -1;
+            cell_dest_j = -1;
+
+            current_gp = game_phases.sel_dest;
+        }
+
         public void deselecting()
         {
-            block_linking_script_1 = blocks_pointers[cell_source_i, cell_source_j].GetComponent<Block_S>();
-            //block_linking_script_2 = blocks_pointers[cell_dest_i, cell_dest_j].GetComponent<Block_S>();
-
-            block_linking_script_1.sr_array[1].color = new Color(block_linking_script_1.sr_array[1].color.r, block_linking_script_1.sr_array[1].color.g, block_linking_script_1.sr_array[1].color.b, 0);
-            //block_linking_script_2.sr_array[1].color = new Color(block_linking_script_1.sr_array[1].color.r, block_linking_script_1.sr_array[1].color.g, block_linking_script_1.sr_array[1].color.b, 0);
+            if (tris_dest || (!tris_dest && !tris_source))
+            {
+                block_linking_script_1 = blocks_pointers[cell_source_i, cell_source_j].GetComponent<Block_S>();
+                block_linking_script_1.sr_array[1].color = new Color(block_linking_script_1.sr_array[1].color.r, block_linking_script_1.sr_array[1].color.g, block_linking_script_1.sr_array[1].color.b, 0);
+            }
+            else if (tris_source)
+            {
+                block_linking_script_2 = blocks_pointers[cell_dest_i, cell_dest_j].GetComponent<Block_S>();
+                block_linking_script_2.sr_array[1].color = new Color(block_linking_script_2.sr_array[1].color.r, block_linking_script_2.sr_array[1].color.g, block_linking_script_2.sr_array[1].color.b, 0);
+            }
             current_gp = game_phases.cyclyng_animation;
         }
 
@@ -570,6 +725,12 @@ namespace MatchThree
 
         public void destroying_tris()
         {
+            c_counter++;
+            score += (1 + (c_counter) / 10f) * (tris_cells.Count * 10);
+            updating_time = true;
+            time += tris_cells.Count * 1;
+            updating_time = false;
+
             for (int i = 0; i < tris_cells.Count; i++)
             {
                 cell_linking_script_1 = tris_cells[i].GetComponent<Cell_S>();
@@ -657,13 +818,13 @@ namespace MatchThree
 
                 for (int j = 0; j < white_counter; j++)
                 {
+                    cell_linking_script_1 = cell_pointers[cell_pointers.GetLength(0) - white_counter + j, mg_columns[k]].GetComponent<Cell_S>();
+                    color_randomization();
+
                     block_linking_init = Resources.Load<GameObject>("Block");
                     block_linking_init = Instantiate<GameObject>(block_linking_init);
                     blocks_pointers[cell_pointers.GetLength(0) - white_counter + j, mg_columns[k]] = block_linking_init;
                     block_linking_init.transform.position = new Vector2(cell_pointers[0, mg_columns[k]].transform.position.x, 10 + j);
-
-                    cell_linking_script_1 = cell_pointers[cell_pointers.GetLength(0) - white_counter + j, mg_columns[k]].GetComponent<Cell_S>();
-                    color_randomization();
 
                     block_linking_script_1 = block_linking_init.GetComponent<Block_S>();
                     block_linking_script_1.target_cell = cell_pointers[cell_pointers.GetLength(0) - white_counter + j, mg_columns[k]].transform;
@@ -728,7 +889,7 @@ namespace MatchThree
                             if ((cell_linking_script_1.sr_array[0].color == cell_linking_script_2.sr_array[0].color)
                         && (cell_linking_script_2.sr_array[0].color == cell_linking_script_3.sr_array[0].color))
                             {
-                               
+
 
                                 if (!tris_cells.Contains(cell_pointers[i, mg_columns[k]]))
                                 {
@@ -770,7 +931,7 @@ namespace MatchThree
                             if ((cell_linking_script_1.sr_array[0].color == cell_linking_script_2.sr_array[0].color)
                        && (cell_linking_script_2.sr_array[0].color == cell_linking_script_3.sr_array[0].color))
                             {
-                                
+
                                 if (!tris_cells.Contains(cell_pointers[i, mg_columns[k]]))
                                 {
 
@@ -812,7 +973,7 @@ namespace MatchThree
                             if ((cell_linking_script_1.sr_array[0].color == cell_linking_script_2.sr_array[0].color)
                        && (cell_linking_script_2.sr_array[0].color == cell_linking_script_3.sr_array[0].color))
                             {
-                                
+
                                 if (!tris_cells.Contains(cell_pointers[i, mg_columns[k]]))
                                 {
 
@@ -854,7 +1015,7 @@ namespace MatchThree
                             if ((cell_linking_script_1.sr_array[0].color == cell_linking_script_2.sr_array[0].color)
                       && (cell_linking_script_2.sr_array[0].color == cell_linking_script_3.sr_array[0].color))
                             {
-                                
+
                                 if (!tris_cells.Contains(cell_pointers[i, mg_columns[k]]))
                                 {
 
@@ -947,6 +1108,10 @@ namespace MatchThree
                 k++;
             }
             reset_tris_checked_boolean();
+
+            if (!tris_found)
+                c_counter = -1;
+
             return tris_found;
         }
 
@@ -954,7 +1119,7 @@ namespace MatchThree
         {
             int k = 0;
 
-            while(k < mg_columns.Count)
+            while (k < mg_columns.Count)
             {
                 for (int i = 0; i < cell_pointers.GetLength(0); i++)
                 {
@@ -963,7 +1128,7 @@ namespace MatchThree
                 }
                 k++;
             }
-            
+
         }
 
 
