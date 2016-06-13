@@ -27,13 +27,15 @@ namespace MatchThree
 
         void Update()
         {
-            if (brain_linking.current_gp >= MThree_S.game_phases.sel_source)
+            if (brain_linking.current_gp >= MThree_S.game_phases.sel_source && brain_linking.current_gp < MThree_S.game_phases.game_over)
             {
                 brain_linking.time_to_next -= Time.deltaTime;
 
                 minutes = (int)brain_linking.time_to_next / 60;
                 seconds = (int)brain_linking.time_to_next % 60;
                 next_level = brain_linking.level + 1;
+
+                if (brain_linking.level < 5)
                 current_level_text.text = "Level " + brain_linking.level;
 
                 if (brain_linking.level < 4)

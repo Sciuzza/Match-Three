@@ -45,11 +45,16 @@ namespace MatchThree
             
             if (distance.magnitude <= 0.1f)
             {
-                transform.position = new Vector3(target_cell.position.x, target_cell.position.y, 8);
+                transform.position = new Vector3(target_cell.position.x, target_cell.position.y, 7);
             }
 
             if (!ps_link.isPlaying && is_dying)
+            {
+                GameObject score_in_place = Resources.Load<GameObject>("Score in Place");
+                score_in_place = Instantiate(score_in_place);
+                score_in_place.transform.position = this.transform.position;
                 Destroy(this.gameObject);
+            }
 
         }
      

@@ -24,7 +24,8 @@ namespace MatchThree
 
         void Update()
         {
-            if (!brain_linking.updating_time && brain_linking.time >= 0 && brain_linking.current_gp >= MThree_S.game_phases.sel_source)
+            if (!brain_linking.updating_time && brain_linking.time >= 0 && (brain_linking.current_gp >= MThree_S.game_phases.sel_source 
+                && brain_linking.current_gp < MThree_S.game_phases.game_over))
             {
                 brain_linking.time -= Time.deltaTime;
 

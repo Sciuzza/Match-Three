@@ -13,7 +13,7 @@ namespace MatchThree
         public GameObject[,] blocks_pointers = new GameObject[8, 10];
 
         // Game phases 
-        public enum game_phases { init, sel_source, sel_dest, animation, tris_p_animation, cyclyng_animation, waiting, game_over };
+        public enum game_phases { init, sel_source, sel_dest, animation, tris_p_animation, cyclyng_animation, waiting, game_over, victory };
         public game_phases current_gp;
 
         //Score
@@ -29,7 +29,7 @@ namespace MatchThree
         bool level_1_sound = false, level_2_sound = false, level_3_sound = false, level_4_sound = false;
 
         // First one is used in the initialization process only, the second one is used to update the blocks pointer matrix too 
-        GameObject cell_linking_init, block_linking_init;
+        GameObject cell_linking_init, block_linking_init, b_block_linking_init;
 
         //Variable used during the initialization by the block spawning phase
         int rows = 0;
@@ -38,7 +38,7 @@ namespace MatchThree
         List<int> color_possibilities = new List<int>();
 
         // Game over Boolean
-        public bool game_over = false;
+        public bool game_over = false, victory = false;
         public bool game_ani_ended = false;
         public float timer_ani = 0;
 
@@ -105,12 +105,18 @@ namespace MatchThree
                     cell_linking_init = Instantiate(cell_linking_init);
                     cell_pointers[i, j] = cell_linking_init;
                     cell_linking_init.transform.position = new Vector3(j - 4.5f, i - 3.5f, cell_linking_init.transform.position.z);
-                    cell_linking_init.name = "Cell" + i + "," + j;
+                    cell_linking_init.name = "Cell " + i + "," + j;
                     cell_linking_script_1 = cell_linking_init.GetComponent<Cell_S>();
                     color_randomization();
                     cell_linking_script_1.cell_i = i;
                     cell_linking_script_1.cell_j = j;
                     fixing_tris(i, j);
+
+                    b_block_linking_init = Resources.Load<GameObject>("Background Block");
+                    b_block_linking_init = Instantiate(b_block_linking_init);
+                    b_block_linking_init.transform.position = new Vector3(j - 4.5f, i - 3.5f, 9);
+                    b_block_linking_init.name = "b_block " + i + "," + j;
+
                 }
             }
 
@@ -149,7 +155,33 @@ namespace MatchThree
             {
                 sound_linking_script.play_environment(3);
                 level_4_sound = true;
+                level++;
                 time_to_next = 150;
+            }
+            // VIctory System
+            else if (level == 4 && time_to_next <= 0 && current_gp != game_phases.victory)
+            {
+                current_gp = game_phases.victory;
+                game_over_linking.text = "Victory";
+                try_again_linking.opacity.text = "Go to Score";
+            }
+            else if (current_gp == game_phases.victory && timer_ani < 1)
+            {
+                game_over_linking.color = new Color(game_over_linking.color.r, game_over_linking.color.g, game_over_linking.color.b, game_over_linking.color.a + (1 * Time.deltaTime));
+                timer_ani += 1 * Time.deltaTime;
+            }
+            else if (timer_ani >= 1)
+            {
+                game_over_linking.color = new Color(game_over_linking.color.r, game_over_linking.color.g, game_over_linking.color.b, 255);
+                game_ani_ended = true;
+            }
+
+            if (current_gp == game_phases.victory && game_ani_ended && !victory)
+            {
+                victory = true;
+                try_again_linking.clickable.enabled = true;
+                try_again_linking.opacity.color = new Color(try_again_linking.opacity.color.r, try_again_linking.opacity.color.g, try_again_linking.opacity.color.b, 255);
+                Time.timeScale = 0;
             }
 
             //Suffer sound proc
@@ -820,7 +852,7 @@ namespace MatchThree
                     block_linking_script_2.sr_array[1].color = new Color(block_linking_script_2.sr_array[1].color.r, block_linking_script_2.sr_array[1].color.g, block_linking_script_2.sr_array[1].color.b, 0);
                 }
                 tris_p_called = true;
-                Invoke("switch_to_tris_p_animation", 1);
+                Invoke("switch_to_tris_p_animation", 0.25f);
             }
             else
             {
@@ -837,7 +869,7 @@ namespace MatchThree
             c_counter++;
             score += (int)(((1 + ((float)c_counter / 10)) * (tris_cells.Count * 10)) * (1 + ((float)level / 10)));
             updating_time = true;
-            time += tris_cells.Count * (((float)5 - level) / 3);
+            time += tris_cells.Count * (((float)5 - level) / 2);
             updating_time = false;
 
             sound_linking_script.play_interaction(9);
@@ -1236,7 +1268,7 @@ namespace MatchThree
             }
             else
             {
-                Invoke("switch_to_tris_p_animation", 1);
+                Invoke("switch_to_tris_p_animation", 0.25f);
             }
 
 
