@@ -13,14 +13,14 @@ namespace MatchThree
         public GameObject[,] blocks_pointers = new GameObject[8, 10];
 
         // Game phases 
-        public enum game_phases { init, sel_source, sel_dest, animation, tris_p_animation, cyclyng_animation, waiting };
+        public enum game_phases { init, sel_source, sel_dest, animation, tris_p_animation, cyclyng_animation, waiting, game_over};
         public game_phases current_gp;
 
         //Score
         public int score = 0;
 
         //Timer
-        public float time = 3000;
+        public float time = 10;
         public bool updating_time = false;
 
         //Time to next level and level variables
@@ -36,6 +36,9 @@ namespace MatchThree
 
         // Used for the Smart Randomization Color System
         List<int> color_possibilities = new List<int>();
+
+        // Game over Boolean
+        bool game_over = false;
 
         //Debugging Variables
 
@@ -156,9 +159,17 @@ namespace MatchThree
 
 
             //Game Over , to be implemented
-            if (time <= 0)
-                SceneManager.LoadScene("Menu");
+            if (time <= 0 && !game_over)
+            {
+                game_over = true;
+                current_gp = game_phases.game_over;
+                if (level < 3)
+                    sound_linking_script.play_environment(5);
+                else
+                    sound_linking_script.play_environment(4);
 
+                Time.timeScale = 0;
+            }
             // Will spawn another row when the current one is surpassing the top matrix row plus a value that will increase over time to deacrease the spawn time
             if (current_gp == game_phases.init && rows < 7)
             {
