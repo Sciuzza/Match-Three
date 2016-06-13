@@ -7,10 +7,17 @@ namespace MatchThree
 {
     public class UI_S : MonoBehaviour {
 
+        General_functions Scene_m_linking;
+
+        void Awake()
+        {
+            Scene_m_linking = GameObject.Find("Scene Manager").GetComponent<General_functions>();
+        }
+
         // Scene selector
         public void StartGame()
         {
-            SceneManager.LoadScene("GamePlay");
+            Scene_m_linking.Loading_gameplay();
         }
 
         public void Credits()

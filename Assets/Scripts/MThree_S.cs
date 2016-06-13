@@ -13,14 +13,14 @@ namespace MatchThree
         public GameObject[,] blocks_pointers = new GameObject[8, 10];
 
         // Game phases 
-        public enum game_phases { init, sel_source, sel_dest, animation, tris_p_animation, cyclyng_animation, waiting, game_over};
+        public enum game_phases { init, sel_source, sel_dest, animation, tris_p_animation, cyclyng_animation, waiting, game_over };
         public game_phases current_gp;
 
         //Score
         public int score = 0;
 
         //Timer
-        public float time = 10;
+        public float time;
         public bool updating_time = false;
 
         //Time to next level and level variables
@@ -38,7 +38,9 @@ namespace MatchThree
         List<int> color_possibilities = new List<int>();
 
         // Game over Boolean
-        bool game_over = false;
+        public bool game_over = false;
+        public bool game_ani_ended = false;
+        public float timer_ani = 0;
 
         //Debugging Variables
 
@@ -70,6 +72,8 @@ namespace MatchThree
         Cell_S cell_linking_script_1, cell_linking_script_2, cell_linking_script_3;
         Block_S block_linking_script_1, block_linking_script_2;
         Sound_S sound_linking_script;
+        TextMesh game_over_linking;
+        Try_S try_again_linking;
 
         //Lists needed to save the cells to be destroyed and the columns to check for tris
         public List<GameObject> tris_cells = new List<GameObject>();
@@ -85,11 +89,12 @@ namespace MatchThree
 
         void Awake()
         {
-
+            Time.timeScale = 1;
             time_start = Time.realtimeSinceStartup;
 
             sound_linking_script = GameObject.Find("Sound Controller").GetComponent<Sound_S>();
-
+            game_over_linking = GameObject.Find("Game Over").GetComponent<TextMesh>();
+            try_again_linking = GameObject.Find("Try Again").GetComponent<Try_S>();
 
             //Here the invisible matrix will be generated
             for (int i = 0; i < cell_pointers.GetLength(0); i++)
@@ -158,18 +163,34 @@ namespace MatchThree
                 is_below_10 = false;
 
 
-            //Game Over , to be implemented
-            if (time <= 0 && !game_over)
+            //Game Over System
+            if (time <= 0 && current_gp != game_phases.game_over)    
+                current_gp = game_phases.game_over;
+
+            else if (time <= 0 && current_gp == game_phases.game_over && timer_ani < 1)
+            {
+                game_over_linking.color = new Color(game_over_linking.color.r, game_over_linking.color.g, game_over_linking.color.b, game_over_linking.color.a + (1 * Time.deltaTime));
+                timer_ani += 1 * Time.deltaTime;
+            }
+            else if (timer_ani >= 1)
+            {
+                game_over_linking.color = new Color(game_over_linking.color.r, game_over_linking.color.g, game_over_linking.color.b, 255);
+                game_ani_ended = true;
+            }
+
+            if (time <= 0 && !game_over && game_ani_ended)
             {
                 game_over = true;
-                current_gp = game_phases.game_over;
                 if (level < 3)
                     sound_linking_script.play_environment(5);
                 else
                     sound_linking_script.play_environment(4);
 
+                try_again_linking.clickable.enabled = true;
+                try_again_linking.opacity.color = new Color(try_again_linking.opacity.color.r, try_again_linking.opacity.color.g, try_again_linking.opacity.color.b, 255);
                 Time.timeScale = 0;
             }
+
             // Will spawn another row when the current one is surpassing the top matrix row plus a value that will increase over time to deacrease the spawn time
             if (current_gp == game_phases.init && rows < 7)
             {
@@ -814,7 +835,7 @@ namespace MatchThree
         public void destroying_tris()
         {
             c_counter++;
-            score +=(int)(((1 + ((float)c_counter / 10)) * (tris_cells.Count * 10)) * (1 + ((float)level / 10)));
+            score += (int)(((1 + ((float)c_counter / 10)) * (tris_cells.Count * 10)) * (1 + ((float)level / 10)));
             updating_time = true;
             time += tris_cells.Count * (((float)5 - level) / 3);
             updating_time = false;
