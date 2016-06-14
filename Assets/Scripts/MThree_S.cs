@@ -13,7 +13,7 @@ namespace MatchThree
         public GameObject[,] blocks_pointers = new GameObject[8, 10];
 
         // Game phases 
-        public enum game_phases { init, sel_source, sel_dest, animation, tris_p_animation, cyclyng_animation, waiting, game_over, victory };
+        public enum game_phases { tutorial, init, sel_source, sel_dest, animation, tris_p_animation, cyclyng_animation, waiting, game_over, victory };
         public game_phases current_gp;
 
         //Score
@@ -29,7 +29,7 @@ namespace MatchThree
         bool level_1_sound = false, level_2_sound = false, level_3_sound = false, level_4_sound = false;
 
         // First one is used in the initialization process only, the second one is used to update the blocks pointer matrix too 
-        GameObject cell_linking_init, block_linking_init, b_block_linking_init;
+        GameObject cell_linking_init, block_linking_init, b_block_linking_init, combo_linking_init;
 
         //Variable used during the initialization by the block spawning phase
         int rows = 0;
@@ -74,6 +74,9 @@ namespace MatchThree
         Sound_S sound_linking_script;
         TextMesh game_over_linking;
         Try_S try_again_linking;
+        Give_S give_up_linking;
+        General_functions scene_m_linking;
+        Timer_S timer_linking;
 
         //Lists needed to save the cells to be destroyed and the columns to check for tris
         public List<GameObject> tris_cells = new List<GameObject>();
@@ -89,12 +92,15 @@ namespace MatchThree
 
         void Awake()
         {
-            Time.timeScale = 1;
+            Time.timeScale = 0;
             time_start = Time.realtimeSinceStartup;
 
+            timer_linking = GameObject.Find("Timer Number").GetComponent<Timer_S>();
             sound_linking_script = GameObject.Find("Sound Controller").GetComponent<Sound_S>();
             game_over_linking = GameObject.Find("Game Over").GetComponent<TextMesh>();
             try_again_linking = GameObject.Find("Try Again").GetComponent<Try_S>();
+            scene_m_linking = GameObject.Find("Scene Manager").GetComponent<General_functions>();
+            give_up_linking = GameObject.Find("Give Up").GetComponent<Give_S>();
 
             //Here the invisible matrix will be generated
             for (int i = 0; i < cell_pointers.GetLength(0); i++)
@@ -104,7 +110,7 @@ namespace MatchThree
                     cell_linking_init = Resources.Load<GameObject>("Cell");
                     cell_linking_init = Instantiate(cell_linking_init);
                     cell_pointers[i, j] = cell_linking_init;
-                    cell_linking_init.transform.position = new Vector3(j - 4.5f, i - 3.5f, cell_linking_init.transform.position.z);
+                    cell_linking_init.transform.position = new Vector3(j - 4.5f, i - 4f, cell_linking_init.transform.position.z);
                     cell_linking_init.name = "Cell " + i + "," + j;
                     cell_linking_script_1 = cell_linking_init.GetComponent<Cell_S>();
                     color_randomization();
@@ -114,7 +120,7 @@ namespace MatchThree
 
                     b_block_linking_init = Resources.Load<GameObject>("Background Block");
                     b_block_linking_init = Instantiate(b_block_linking_init);
-                    b_block_linking_init.transform.position = new Vector3(j - 4.5f, i - 3.5f, 9);
+                    b_block_linking_init.transform.position = new Vector3(j - 4.5f, i - 4f, 9);
                     b_block_linking_init.name = "b_block " + i + "," + j;
 
                 }
@@ -131,8 +137,14 @@ namespace MatchThree
         public void Update()
         {
 
+            //Restart and Quit
+            if (Input.GetKeyDown(KeyCode.Escape) && current_gp >= game_phases.sel_source)
+                scene_m_linking.Application_quit();
+            if (Input.GetKeyDown(KeyCode.Space) && current_gp >= game_phases.sel_source)
+                scene_m_linking.restart_scene();
+
             //Sound level Management
-            if (level == 1 && !level_1_sound)
+            if (level == 1 && !level_1_sound && current_gp == game_phases.init)
             {
                 sound_linking_script.play_environment(0);
                 level_1_sound = true;
@@ -161,9 +173,12 @@ namespace MatchThree
             // VIctory System
             else if (level == 4 && time_to_next <= 0 && current_gp != game_phases.victory)
             {
+                score += (int)time * 60;
+                time = 0;
+                timer_linking.timerLabel.text = "00:00";
                 current_gp = game_phases.victory;
+                sound_linking_script.play_environment(7);
                 game_over_linking.text = "Victory";
-                try_again_linking.opacity.text = "Go to Score";
             }
             else if (current_gp == game_phases.victory && timer_ani < 1)
             {
@@ -181,6 +196,8 @@ namespace MatchThree
                 victory = true;
                 try_again_linking.clickable.enabled = true;
                 try_again_linking.opacity.color = new Color(try_again_linking.opacity.color.r, try_again_linking.opacity.color.g, try_again_linking.opacity.color.b, 255);
+                give_up_linking.clickable.enabled = true;
+                give_up_linking.opacity.color = new Color(give_up_linking.opacity.color.r, give_up_linking.opacity.color.g, give_up_linking.opacity.color.b, 255);
                 Time.timeScale = 0;
             }
 
@@ -220,6 +237,8 @@ namespace MatchThree
 
                 try_again_linking.clickable.enabled = true;
                 try_again_linking.opacity.color = new Color(try_again_linking.opacity.color.r, try_again_linking.opacity.color.g, try_again_linking.opacity.color.b, 255);
+                give_up_linking.clickable.enabled = true;
+                give_up_linking.opacity.color = new Color(give_up_linking.opacity.color.r, give_up_linking.opacity.color.g, give_up_linking.opacity.color.b, 255);
                 Time.timeScale = 0;
             }
 
@@ -873,6 +892,10 @@ namespace MatchThree
             updating_time = false;
 
             sound_linking_script.play_interaction(9);
+
+            combo_linking_init = Resources.Load<GameObject>("Combo Type");
+            combo_linking_init = Instantiate(combo_linking_init);
+            combo_linking_init.transform.position = new Vector3(0, 4.5f, 3);
 
             for (int i = 0; i < tris_cells.Count; i++)
             {

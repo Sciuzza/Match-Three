@@ -16,6 +16,7 @@ namespace MatchThree
 
         void Awake()
         {
+            DontDestroyOnLoad(this);
             Music = this.gameObject.transform.Find("Music").GetComponents<AudioSource>();
             Music[0].Play();
             Music[0].loop = true;
@@ -43,6 +44,11 @@ namespace MatchThree
         public void play_special(int number)
         {
             Special[number].Play();
+        }
+
+        public void stop_play_environment()
+        {
+            Environment[6].Stop();
         }
 
     }

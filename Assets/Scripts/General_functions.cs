@@ -21,5 +21,10 @@ namespace MatchThree {
         {
             SceneManager.LoadScene("GamePlay");
         }
+
+        public void Application_quit()
+        {
+            Application.Quit();
+        }
     }
 }
