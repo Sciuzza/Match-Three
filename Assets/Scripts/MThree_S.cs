@@ -174,7 +174,6 @@ namespace MatchThree
             else if (level == 4 && time_to_next <= 0 && current_gp != game_phases.victory)
             {
                 score += (int)time * 60;
-                time = 0;
                 timer_linking.timerLabel.text = "00:00";
                 current_gp = game_phases.victory;
                 sound_linking_script.play_environment(7);
